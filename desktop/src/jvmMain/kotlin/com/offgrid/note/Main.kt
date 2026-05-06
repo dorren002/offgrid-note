@@ -21,7 +21,15 @@ fun main() = application {
         val dbFile = File(System.getProperty("user.home"), ".offgrid/offgrid.db")
         dbFile.parentFile?.mkdirs()
         val driver = JdbcSqliteDriver("jdbc:sqlite:${dbFile.absolutePath}")
-        OffgridDatabase.Schema.create(driver)
+        
+        // 安全地初始化数据库：如果表不存在则创建
+        try {
+            OffgridDatabase.Schema.create(driver)
+        } catch (e: Exception) {
+            // 表已存在，忽略异常
+            println("Database already exists, skipping creation: ${e.message}")
+        }
+        
         val database = OffgridDatabase(driver)
         val repository = NoteRepository(database)
 

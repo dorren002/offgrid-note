@@ -11,17 +11,17 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
-                implementation("com.squareup.sqldelight:runtime:1.5.5")
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material3)
-                implementation("org.jetbrains.compose.material:material-icons-extended:1.5.11")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+                api("com.squareup.sqldelight:runtime:1.5.5")
+                api(compose.runtime)
+                api(compose.foundation)
+                api(compose.material3)
+                api("org.jetbrains.compose.material:material-icons-extended:1.5.11")
             }
         }
         val jvmMain by getting {
             dependencies {
-                implementation("com.squareup.sqldelight:sqlite-driver:1.5.5")
+                api("com.squareup.sqldelight:sqlite-driver:1.5.5")
             }
         }
     }

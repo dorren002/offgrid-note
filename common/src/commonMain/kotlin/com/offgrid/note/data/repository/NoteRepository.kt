@@ -2,6 +2,7 @@ package com.offgrid.note.data.repository
 
 import com.offgrid.note.data.model.Note
 import com.offgrid.note.database.OffgridDatabase
+import com.offgrid.note.database.Notes
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -9,28 +10,22 @@ import java.util.UUID
 
 class NoteRepository(private val database: OffgridDatabase) {
 
+    private fun Notes.toNote(): Note {
+        return Note(
+            id = this.id,
+            content = this.content,
+            createdAt = kotlinx.datetime.Instant.fromEpochMilliseconds(this.created_at),
+            updatedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(this.updated_at),
+            editCount = this.edit_count.toInt()
+        )
+    }
+
     fun getAllNotes(): List<Note> {
-        return database.offgridDatabaseQueries.selectAllNotes().executeAsList().map { row ->
-            Note(
-                id = row.id,
-                content = row.content,
-                createdAt = kotlinx.datetime.Instant.fromEpochMilliseconds(row.created_at),
-                updatedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(row.updated_at),
-                editCount = row.edit_count.toInt()
-            )
-        }
+        return database.offgridDatabaseQueries.selectAllNotes().executeAsList().map { it.toNote() }
     }
 
     fun getNoteById(id: String): Note? {
-        return database.offgridDatabaseQueries.selectNoteById(id).executeAsOneOrNull()?.let { row ->
-            Note(
-                id = row.id,
-                content = row.content,
-                createdAt = kotlinx.datetime.Instant.fromEpochMilliseconds(row.created_at),
-                updatedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(row.updated_at),
-                editCount = row.edit_count.toInt()
-            )
-        }
+        return database.offgridDatabaseQueries.selectNoteById(id).executeAsOneOrNull()?.toNote()
     }
 
     fun insertNote(content: String): Note {
@@ -73,15 +68,7 @@ class NoteRepository(private val database: OffgridDatabase) {
     }
 
     fun searchNotes(query: String): List<Note> {
-        return database.offgridDatabaseQueries.searchNotes(query).executeAsList().map { row ->
-            Note(
-                id = row.id,
-                content = row.content,
-                createdAt = kotlinx.datetime.Instant.fromEpochMilliseconds(row.created_at),
-                updatedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(row.updated_at),
-                editCount = row.edit_count.toInt()
-            )
-        }
+        return database.offgridDatabaseQueries.searchNotes(query).executeAsList().map { it.toNote() }
     }
 
     fun exportToMarkdown(): String {

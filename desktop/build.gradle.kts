@@ -1,15 +1,21 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm")
+    kotlin("multiplatform")
     id("org.jetbrains.compose")
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
-}
-
-dependencies {
-    implementation(project(":common"))
-    implementation(compose.desktop.currentOs)
+kotlin {
+    jvm {
+        jvmToolchain(17)
+        withJava()
+    }
+    sourceSets {
+        val jvmMain by getting {
+            dependencies {
+                implementation(project(":common"))
+                implementation(compose.desktop.currentOs)
+            }
+        }
+    }
 }
 
 compose.desktop {
