@@ -1,0 +1,62 @@
+# Kotlin
+*.kotlin_module
+build/
+bin/
+.gradle/
+local.properties
+
+# IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
+out/
+.gradle/
+build/
+local.properties
+proguard/
+*.log
+*.nav
+navigation/
+captures/
+.externalNativeBuild
+.cxx/
+*.keystore
+*.jks
+
+# Compose Desktop
+native-dist/
+*.dmg
+*.msi
+*.deb
+*.pkg
+
+# SQLDelight
+.sqldelight/
+
+# Logs
+*.log
