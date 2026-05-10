@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天应用界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 1200px;
+            height: 90vh;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 左侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #fff;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            position: relative;
+        }
+
+        .avatar.online::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 12px;
+            height: 12px;
+            background: #28a745;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+
+        .user-info h3 {
+            font-size: 16px;
+            color: #212529;
+            margin-bottom: 4px;
+        }
+
+        .user-info p {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .search-box {
+            padding: 15px 20px;
+            background: #fff;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .chat-item:hover {
+            background: #e9ecef;
+        }
+
+        .chat-item.active {
+            background: #e7e9ff;
+            border-left: 3px solid #667eea;
+        }
+
+        .chat-item .avatar {
+            width: 44px;
+            height: 44px;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .chat-info {
+            flex: 1;
+            margin-left: 12px;
+            min-width: 0;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .chat-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #212529;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-time {
+            font-size: 11px;
+            color: #6c757d;
+            flex-shrink: 0;
+        }
+
+        .chat-preview {
+            font-size: 13px;
+            color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .unread-badge {
+            background: #dc3545;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        /* 主聊天区域 */
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+
+        .chat-header-bar {
+            padding: 15px 25px;
+            background: #fff;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-title .avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 14px;
+        }
+
+        .chat-title-info h4 {
+            font-size: 16px;
+            color: #212529;
+            margin-bottom: 2px;
+        }
+
+        .chat-title-info span {
+            font-size: 12px;
+            color: #28a745;
+        }
+
+        .chat-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f8f9fa;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #6c757d;
+        }
+
+        .action-btn:hover {
+            background: #e9ecef;
+            color: #667eea;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 25px;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #fff 100%);
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.sent {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 60%;
+            margin: 0 12px;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.received .message-bubble {
+            background: #fff;
+            color: #212529;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.sent .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #adb5bd;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message.received .message-time {
+            text-align: left;
+        }
+
+        .date-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .date-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e9ecef;
+        }
+
+        .date-divider span {
+            background: #f8f9fa;
+            padding: 0 15px;
+            font-size: 12px;
+            color: #6c757d;
+            position: relative;
+        }
+
+        /* 输入区域 */
+        .input-area {
+            padding: 20px 25px;
+            background: #fff;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-toolbar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+
+        .toolbar-btn {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 20px;
+            transition: color 0.2s;
+            padding: 5px;
+        }
+
+        .toolbar-btn:hover {
+            color: #667eea;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 1px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: absolute;
+                z-index: 10;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-chat {
+                width: 100%;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- 左侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <div class="avatar online">我</div>
+                    <div class="user-info">
+                        <h3>我的账号</h3>
+                        <p>在线</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜索聊天...">
+            </div>
+            
+            <div class="chat-list">
+                <div class="chat-item active">
+                    <div class="avatar online" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">李</div>
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">李明</span>
+                            <span class="chat-time">10:30</span>
+                        </div>
+                        <div class="chat-preview">好的，明天见！</div>
+                    </div>
+                </div>
+                
+                <div class="chat-item">
+                    <div class="avatar" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">王</div>
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">王小红</span>
+                            <span class="chat-time">09:15</span>
+                        </div>
+                        <div class="chat-preview">项目进度怎么样了？</div>
+                    </div>
+                    <span class="unread-badge">3</span>
+                </div>
+                
+                <div class="chat-item">
+                    <div class="avatar online" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">张</div>
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">张团队</span>
+                            <span class="chat-time">昨天</span>
+                        </div>
+                        <div class="chat-preview">[图片] 设计方案已更新</div>
+                    </div>
+                </div>
+                
+                <div class="chat-item">
+                    <div class="avatar" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">陈</div>
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <span class="chat-name">陈经理</span>
+                            <span class="chat-time">周一</span>
+                        </div>
+                        <div class="chat-preview">收到，谢谢！</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主聊天区域 -->
+        <main class="main-chat">
+            <div class="chat-header-bar">
+                <div class="chat-title">
+                    <div class="avatar online" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">李</div>
+                    <div class="chat-title-info">
+                        <h4>李明</h4>
+                        <span>● 在线</span>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="action-btn">📞</button>
+                    <button class="action-btn">📹</button>
+                    <button class="action-btn">ℹ️</button>
+                </div>
+            </div>
+
+            <div class="messages-area">
+                <div class="date-divider">
+                    <span>今天</span>
+                </div>
+
+                <div class="message received">
+                    <div class="avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">李</div>
+                    <div class="message-content">
+                        <div class="message-bubble">嗨！最近怎么样？</div>
+                        <div class="message-time">10:25</div>
+                    </div>
+                </div>
+
+                <div class="message sent">
+                    <div class="avatar online">我</div>
+                    <div class="message-content">
+                        <div class="message-bubble">挺好的！刚完成了一个新项目，你呢？</div>
+                        <div class="message-time">10:27</div>
+                    </div>
+                </div>
+
+                <div class="message received">
+                    <div class="avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">李</div>
+                    <div class="message-content">
+                        <div class="message-bubble">我也在忙一个新项目，挺有挑战性的。对了，周末有空吗？想约你出来聊聊。</div>
+                        <div class="message-time">10:28</div>
+                    </div>
+                </div>
+
+                <div class="message sent">
+                    <div class="avatar online">我</div>
+                    <div class="message-content">
+                        <div class="message-bubble">好啊！周六下午怎么样？</div>
+                        <div class="message-time">10:29</div>
+                    </div>
+                </div>
+
+                <div class="message received">
+                    <div class="avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">李</div>
+                    <div class="message-content">
+                        <div class="message-bubble">好的，明天见！</div>
+                        <div class="message-time">10:30</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-toolbar">
+                    <button class="toolbar-btn">😊</button>
+                    <button class="toolbar-btn">📎</button>
+                    <button class="toolbar-btn">🖼️</button>
+                    <button class="toolbar-btn">🎤</button>
+                </div>
+                <div class="input-wrapper">
+                    <textarea class="message-input" placeholder="输入消息..." rows="1"></textarea>
+                    <button class="send-btn">
+                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 简单的交互效果
+        document.querySelectorAll('.chat-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 输入框自动调整高度
+        const textarea = document.querySelector('.message-input');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    </script>
+</body>
+</html>

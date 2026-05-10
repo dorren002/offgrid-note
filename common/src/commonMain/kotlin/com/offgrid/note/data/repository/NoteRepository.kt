@@ -62,6 +62,18 @@ class NoteRepository(private val database: OffgridDatabase) {
         )
         return true
     }
+    
+    fun forceUpdateNote(id: String, newContent: String): Boolean {
+        val note = getNoteById(id) ?: return false
+        
+        val now = Clock.System.now()
+        database.offgridDatabaseQueries.updateNote(
+            content = newContent,
+            updated_at = now.toEpochMilliseconds(),
+            id = id
+        )
+        return true
+    }
 
     fun deleteNote(id: String) {
         database.offgridDatabaseQueries.deleteNote(id)
@@ -82,7 +94,11 @@ class NoteRepository(private val database: OffgridDatabase) {
         builder.appendLine()
 
         notes.forEach { note ->
-            val dateTime = note.createdAt.toLocalDateTime(TimeZone.currentSystemDefault())
+            val dateTime = try {
+                note.createdAt.toLocalDateTime(TimeZone.currentSystemDefault())
+            } catch (e: Exception) {
+                note.createdAt.toLocalDateTime(TimeZone.UTC)
+            }
             builder.appendLine("## ${dateTime.date} ${dateTime.time}")
             builder.appendLine()
             builder.appendLine(note.content)

@@ -6,14 +6,14 @@ CREATE TABLE notes (
     edit_count INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX notes_created_at ON notes(created_at DESC);
+CREATE INDEX notes_created_at ON notes(created_at ASC);
 
 insertNote:
 INSERT INTO notes(id, content, created_at, updated_at, edit_count)
 VALUES (?, ?, ?, ?, ?);
 
 selectAllNotes:
-SELECT * FROM notes ORDER BY created_at DESC;
+SELECT * FROM notes ORDER BY created_at ASC;
 
 selectNoteById:
 SELECT * FROM notes WHERE id = ?;
@@ -24,7 +24,7 @@ SET content = ?, updated_at = ?, edit_count = edit_count + 1
 WHERE id = ? AND edit_count < 3;
 
 searchNotes:
-SELECT * FROM notes WHERE content LIKE '%' || :query || '%' ORDER BY created_at DESC;
+SELECT * FROM notes WHERE content LIKE '%' || :query || '%' ORDER BY created_at ASC;
 
 deleteNote:
 DELETE FROM notes WHERE id = ?;
