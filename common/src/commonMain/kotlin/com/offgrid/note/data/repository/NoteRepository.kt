@@ -1,8 +1,10 @@
 package com.offgrid.note.data.repository
 
 import com.offgrid.note.data.model.Note
+import com.offgrid.note.data.model.Scene
 import com.offgrid.note.database.OffgridDatabase
 import com.offgrid.note.database.Notes
+import com.offgrid.note.database.Scenes
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -16,7 +18,17 @@ class NoteRepository(private val database: OffgridDatabase) {
             content = this.content,
             createdAt = kotlinx.datetime.Instant.fromEpochMilliseconds(this.created_at),
             updatedAt = kotlinx.datetime.Instant.fromEpochMilliseconds(this.updated_at),
-            editCount = this.edit_count.toInt()
+            editCount = this.edit_count.toInt(),
+            sceneId = this.scene_id
+        )
+    }
+
+    private fun Scenes.toScene(): Scene {
+        return Scene(
+            id = this.id,
+            name = this.name,
+            createdAt = kotlinx.datetime.Instant.fromEpochMilliseconds(this.created_at),
+            sortOrder = this.sort_order.toInt()
         )
     }
 
@@ -24,11 +36,15 @@ class NoteRepository(private val database: OffgridDatabase) {
         return database.offgridDatabaseQueries.selectAllNotes().executeAsList().map { it.toNote() }
     }
 
+    fun getNotesByScene(sceneId: String): List<Note> {
+        return database.offgridDatabaseQueries.selectNotesByScene(sceneId).executeAsList().map { it.toNote() }
+    }
+
     fun getNoteById(id: String): Note? {
         return database.offgridDatabaseQueries.selectNoteById(id).executeAsOneOrNull()?.toNote()
     }
 
-    fun insertNote(content: String): Note {
+    fun insertNote(content: String, sceneId: String = ""): Note {
         val id = UUID.randomUUID().toString()
         val now = Clock.System.now()
         val nowMillis = now.toEpochMilliseconds()
@@ -38,7 +54,8 @@ class NoteRepository(private val database: OffgridDatabase) {
             content = content,
             created_at = nowMillis,
             updated_at = nowMillis,
-            edit_count = 0
+            edit_count = 0,
+            scene_id = sceneId
         )
 
         return Note(
@@ -46,7 +63,8 @@ class NoteRepository(private val database: OffgridDatabase) {
             content = content,
             createdAt = now,
             updatedAt = now,
-            editCount = 0
+            editCount = 0,
+            sceneId = sceneId
         )
     }
 
@@ -81,6 +99,48 @@ class NoteRepository(private val database: OffgridDatabase) {
 
     fun searchNotes(query: String): List<Note> {
         return database.offgridDatabaseQueries.searchNotes(query).executeAsList().map { it.toNote() }
+    }
+
+    // Scene functions
+    fun getAllScenes(): List<Scene> {
+        return database.offgridDatabaseQueries.selectAllScenes().executeAsList().map { it.toScene() }
+    }
+
+    fun getSceneById(id: String): Scene? {
+        return database.offgridDatabaseQueries.selectSceneById(id).executeAsOneOrNull()?.toScene()
+    }
+
+    fun insertScene(name: String): Scene {
+        val id = UUID.randomUUID().toString()
+        val now = Clock.System.now()
+        val allScenes = getAllScenes()
+        val sortOrder = allScenes.size
+
+        database.offgridDatabaseQueries.insertScene(
+            id = id,
+            name = name,
+            created_at = now.toEpochMilliseconds(),
+            sort_order = sortOrder.toLong()
+        )
+
+        return Scene(
+            id = id,
+            name = name,
+            createdAt = now,
+            sortOrder = sortOrder
+        )
+    }
+
+    fun updateScene(id: String, newName: String): Boolean {
+        database.offgridDatabaseQueries.updateScene(
+            name = newName,
+            id = id
+        )
+        return true
+    }
+
+    fun deleteScene(id: String) {
+        database.offgridDatabaseQueries.deleteScene(id)
     }
 
     fun exportToMarkdown(): String {

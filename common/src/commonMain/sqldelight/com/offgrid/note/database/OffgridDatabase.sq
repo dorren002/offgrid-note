@@ -3,17 +3,31 @@ CREATE TABLE notes (
     content TEXT NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    edit_count INTEGER NOT NULL DEFAULT 0
+    edit_count INTEGER NOT NULL DEFAULT 0,
+    scene_id TEXT NOT NULL DEFAULT ''
 );
 
 CREATE INDEX notes_created_at ON notes(created_at ASC);
+CREATE INDEX notes_scene_id ON notes(scene_id);
+
+CREATE TABLE scenes (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX scenes_sort_order ON scenes(sort_order ASC);
 
 insertNote:
-INSERT INTO notes(id, content, created_at, updated_at, edit_count)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO notes(id, content, created_at, updated_at, edit_count, scene_id)
+VALUES (?, ?, ?, ?, ?, ?);
 
 selectAllNotes:
-SELECT * FROM notes ORDER BY created_at ASC;
+SELECT * FROM notes ORDER BY created_at DESC;
+
+selectNotesByScene:
+SELECT * FROM notes WHERE scene_id = ? ORDER BY created_at DESC;
 
 selectNoteById:
 SELECT * FROM notes WHERE id = ?;
@@ -28,3 +42,21 @@ SELECT * FROM notes WHERE content LIKE '%' || :query || '%' ORDER BY created_at 
 
 deleteNote:
 DELETE FROM notes WHERE id = ?;
+
+insertScene:
+INSERT INTO scenes(id, name, created_at, sort_order)
+VALUES (?, ?, ?, ?);
+
+selectAllScenes:
+SELECT * FROM scenes ORDER BY sort_order ASC, created_at ASC;
+
+selectSceneById:
+SELECT * FROM scenes WHERE id = ?;
+
+updateScene:
+UPDATE scenes
+SET name = ?
+WHERE id = ?;
+
+deleteScene:
+DELETE FROM scenes WHERE id = ?;

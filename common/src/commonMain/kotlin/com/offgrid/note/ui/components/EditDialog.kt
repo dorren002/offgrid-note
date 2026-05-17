@@ -51,7 +51,7 @@ fun EditDialog(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "最终思绪确认",
+                        text = "Final Thought Confirmation",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 16.sp,
                         color = theme.text
@@ -60,7 +60,7 @@ fun EditDialog(
                     Spacer(modifier = Modifier.height(12.dp))
                     
                     Text(
-                        text = "此次修改后，该笔记将定格为只读记忆，无法撤回。",
+                        text = "After this modification, the note will be finalized as read-only and cannot be undone.",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 13.sp,
                         color = theme.text.copy(alpha = 0.7f)
@@ -74,7 +74,7 @@ fun EditDialog(
                     ) {
                         TextButton(onClick = { showFinalConfirm = false }) {
                             Text(
-                                "返回",
+                                "Back",
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 13.sp,
                                 color = theme.text
@@ -96,7 +96,7 @@ fun EditDialog(
                             )
                         ) {
                             Text(
-                                "写入定格",
+                                "Finalize",
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 13.sp
                             )
@@ -127,14 +127,17 @@ fun EditDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isReadOnly) "查看笔记" else "编辑笔记",
+                        text = when {
+                            isReadOnly -> "View Note"
+                            else -> "Edit Note"
+                        },
                         fontFamily = FontFamily.Monospace,
                         fontSize = 16.sp,
                         color = theme.text
                     )
                     if (isSecondEdit) {
                         Text(
-                            text = "最后一次修改",
+                            text = "Final Edit",
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
                             color = theme.border
@@ -171,7 +174,7 @@ fun EditDialog(
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
                         Text(
-                            text = "慎重，这是你最后一次修改机会",
+                            text = "Caution, this is your last chance to edit",
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
                             color = theme.border
@@ -184,7 +187,7 @@ fun EditDialog(
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
                         Text(
-                            text = "此笔记已定格为只读记忆",
+                            text = "This note is now locked as read-only memory",
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,
                             color = theme.text.copy(alpha = 0.5f)
@@ -200,7 +203,7 @@ fun EditDialog(
                 ) {
                     TextButton(onClick = onCancel) {
                         Text(
-                            text = "取消",
+                            text = "Cancel",
                             fontFamily = FontFamily.Monospace,
                             fontSize = 13.sp,
                             color = theme.text
@@ -227,7 +230,7 @@ fun EditDialog(
                             )
                         ) {
                             Text(
-                                text = if (note.editCount == 2) "写入定格" else "保存",
+                                text = if (note.editCount == 2) "Finalize" else "Save",
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 13.sp
                             )

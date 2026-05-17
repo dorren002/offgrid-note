@@ -8,8 +8,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
@@ -20,31 +23,39 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.offgrid.note.data.model.Note
+import com.offgrid.note.data.model.Scene
 import com.offgrid.note.data.repository.NoteRepository
 import com.offgrid.note.ui.components.EditScreen
 import com.offgrid.note.ui.components.NoteCard
+import com.offgrid.note.ui.components.SceneScreen
 import com.offgrid.note.ui.components.SettingsScreen
 import com.offgrid.note.ui.theme.LocalOffgridTheme
 import com.offgrid.note.ui.theme.OffgridThemeData
+import com.offgrid.note.ui.theme.ThemeStorage
 
 @Composable
-fun OffgridMobileApp(repository: NoteRepository) {
-    var notes by remember { mutableStateOf(repository.getAllNotes()) }
+fun OffgridMobileApp(
+    repository: NoteRepository,
+    onExportNotes: (String) -> Unit
+) {
+    var currentSceneId by remember { mutableStateOf(Scene.DEFAULT_SCENE_ID) }
+    var notes by remember { mutableStateOf(repository.getNotesByScene(currentSceneId)) }
+    var scenes by remember { mutableStateOf(repository.getAllScenes()) }
     var inputText by remember { mutableStateOf("") }
     var selectedNote by remember { mutableStateOf<Note?>(null) }
     var showEditDialog by remember { mutableStateOf(false) }
     var editingNoteId by remember { mutableStateOf<String?>(null) }
     var showSettingsDialog by remember { mutableStateOf(false) }
+    var showSceneDialog by remember { mutableStateOf(false) }
     var currentTheme by remember { mutableStateOf(OffgridThemeData.Default) }
     
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
     
     var cursorVisible by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
@@ -55,6 +66,27 @@ fun OffgridMobileApp(repository: NoteRepository) {
             kotlinx.coroutines.delay(400)
         }
     }
+    
+    LaunchedEffect(Unit) {
+        val savedTheme = ThemeStorage.loadTheme()
+        if (savedTheme != null) {
+            currentTheme = savedTheme
+        }
+    }
+
+    // Load saved scene ID on start
+    LaunchedEffect(Unit) {
+        val savedSceneId = ThemeStorage.loadSceneId()
+        if (savedSceneId != null) {
+            currentSceneId = savedSceneId
+        }
+    }
+
+    // Refresh notes when scene changes
+    LaunchedEffect(currentSceneId) {
+        notes = repository.getNotesByScene(currentSceneId)
+        scenes = repository.getAllScenes()
+    }
 
     CompositionLocalProvider(LocalOffgridTheme provides currentTheme) {
         Box(
@@ -62,47 +94,55 @@ fun OffgridMobileApp(repository: NoteRepository) {
                 .fillMaxSize()
                 .background(currentTheme.background)
         ) {
-            val topBarHeight = 57.dp
-            
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(top = topBarHeight, bottom = 120.dp)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                items(notes, key = { it.id }) { note ->
-                    NoteCard(
-                        note = note,
-                        isEditing = editingNoteId == note.id,
-                        onEdit = {
-                            selectedNote = note
-                            editingNoteId = note.id
-                            showEditDialog = true
-                        }
-                    )
-                }
-            }
+                TopBar(
+                    theme = currentTheme,
+                    currentSceneId = currentSceneId,
+                    scenes = scenes,
+                    onSceneClick = { showSceneDialog = true },
+                    onSettingsClick = { showSettingsDialog = true }
+                )
 
-            TopBar(
-                theme = currentTheme,
-                onSettingsClick = { showSettingsDialog = true },
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-
-            BottomArea(
-                theme = currentTheme,
-                inputText = inputText,
-                cursorVisible = cursorVisible,
-                onInputChange = { inputText = it },
-                onSend = {
-                    if (inputText.isNotBlank()) {
-                        repository.insertNote(inputText.trim())
-                        notes = repository.getAllNotes()
-                        inputText = ""
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 10.dp),
+                    reverseLayout = true
+                ) {
+                    items(notes, key = { it.id }) { note ->
+                        NoteCard(
+                            note = note,
+                            isEditing = editingNoteId == note.id,
+                            onEdit = {
+                                selectedNote = note
+                                editingNoteId = note.id
+                                showEditDialog = true
+                            }
+                        )
                     }
-                },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
+                }
+
+                BottomArea(
+                    theme = currentTheme,
+                    inputText = inputText,
+                    cursorVisible = cursorVisible,
+                    onInputChange = { inputText = it },
+                    onSend = {
+                        if (inputText.isNotBlank()) {
+                            repository.insertNote(inputText.trim(), currentSceneId)
+                            notes = repository.getNotesByScene(currentSceneId)
+                            inputText = ""
+                            coroutineScope.launch {
+                                listState.scrollToItem(0)
+                            }
+                        }
+                    }
+                )
+            }
 
             val currentNote = selectedNote
             
@@ -111,7 +151,7 @@ fun OffgridMobileApp(repository: NoteRepository) {
                     note = currentNote,
                     onSave = { newContent ->
                         repository.updateNote(currentNote.id, newContent)
-                        notes = repository.getAllNotes()
+                        notes = repository.getNotesByScene(currentSceneId)
                         editingNoteId = null
                         showEditDialog = false
                         selectedNote = null
@@ -123,7 +163,7 @@ fun OffgridMobileApp(repository: NoteRepository) {
                     },
                     onFinalConfirm = {
                         repository.updateNote(currentNote.id, currentNote.content)
-                        notes = repository.getAllNotes()
+                        notes = repository.getNotesByScene(currentSceneId)
                         editingNoteId = null
                         showEditDialog = false
                         selectedNote = null
@@ -134,8 +174,26 @@ fun OffgridMobileApp(repository: NoteRepository) {
             if (showSettingsDialog) {
                 SettingsScreen(
                     currentTheme = currentTheme,
-                    onThemeChange = { newTheme -> currentTheme = newTheme },
+                    repository = repository,
+                    onThemeChange = { newTheme -> 
+                        currentTheme = newTheme
+                        ThemeStorage.saveTheme(newTheme)
+                    },
+                    onExportNotes = onExportNotes,
                     onDismiss = { showSettingsDialog = false }
+                )
+            }
+
+            if (showSceneDialog) {
+                SceneScreen(
+                    repository = repository,
+                    currentSceneId = currentSceneId,
+                    onSceneSelect = { newSceneId ->
+                        currentSceneId = newSceneId
+                        ThemeStorage.saveSceneId(newSceneId)
+                        showSceneDialog = false
+                    },
+                    onDismiss = { showSceneDialog = false }
                 )
             }
         }
@@ -145,9 +203,17 @@ fun OffgridMobileApp(repository: NoteRepository) {
 @Composable
 fun TopBar(
     theme: OffgridThemeData,
+    currentSceneId: String,
+    scenes: List<Scene>,
+    onSceneClick: () -> Unit,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currentSceneName = when {
+        currentSceneId == Scene.DEFAULT_SCENE_ID -> "OffGrid.Note"
+        else -> scenes.find { it.id == currentSceneId }?.name ?: "OffGrid.Note"
+    }
+
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -158,12 +224,28 @@ fun TopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "OffGrid.Note",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                color = theme.text.copy(alpha = 0.5f)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onSceneClick,
+                    modifier = Modifier.size(20.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Scenes",
+                        tint = theme.text.copy(alpha = 0.5f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = currentSceneName,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 14.sp,
+                    color = theme.border
+                )
+            }
             Row {
                 Icon(
                     imageVector = Icons.Default.Lock,

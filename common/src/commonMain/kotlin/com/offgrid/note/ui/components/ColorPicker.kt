@@ -4,11 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,13 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.offgrid.note.ui.theme.LocalOffgridTheme
-
-data class ColorOption(
-    val name: String,
-    val color: Color
-)
 
 object ColorPalette {
     val colors = listOf(
@@ -48,7 +42,7 @@ object ColorPalette {
 }
 
 @Composable
-fun ColorPickerDialog(
+fun ColorPickerScreen(
     title: String,
     currentColor: Color,
     onColorSelected: (Color) -> Unit,
@@ -56,40 +50,69 @@ fun ColorPickerDialog(
 ) {
     val theme = LocalOffgridTheme.current
     
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(theme.background)
+    ) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, theme.border),
-            color = theme.background,
-            shape = RoundedCornerShape(4.dp)
+                .height(56.dp)
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.size(48.dp)
             ) {
-                Text(
-                    text = title,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 16.sp,
-                    color = theme.text
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = theme.text,
+                    modifier = Modifier.size(24.dp)
                 )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(8),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.height(200.dp)
+            }
+
+            Text(
+                text = title,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 16.sp,
+                color = theme.text
+            )
+
+            Spacer(modifier = Modifier.width(48.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(theme.border.copy(alpha = 0.3f))
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ColorPalette.colors.chunked(4).forEach { rowColors ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(ColorPalette.colors) { color ->
+                    rowColors.forEach { color ->
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
+                                .weight(1f)
+                                .aspectRatio(1f)
                                 .clip(CircleShape)
                                 .background(color)
                                 .border(
-                                    width = if (color == currentColor) 2.dp else 1.dp,
+                                    width = if (color == currentColor) 3.dp else 1.dp,
                                     color = if (color == currentColor) theme.border else theme.text.copy(alpha = 0.3f),
                                     shape = CircleShape
                                 )
@@ -99,21 +122,8 @@ fun ColorPickerDialog(
                                 }
                         )
                     }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(
-                            "取消",
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 13.sp,
-                            color = theme.text.copy(alpha = 0.6f)
-                        )
+                    repeat(4 - rowColors.size) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }

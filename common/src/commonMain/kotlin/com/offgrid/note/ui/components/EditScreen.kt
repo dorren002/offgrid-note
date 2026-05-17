@@ -64,7 +64,7 @@ fun EditScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "取消",
+                    text = "Cancel",
                     fontFamily = FontFamily.Monospace,
                     fontSize = 14.sp,
                     color = theme.text
@@ -72,14 +72,22 @@ fun EditScreen(
             }
 
             Text(
-                text = if (isReadOnly) "查看笔记" else if (isSecondEdit) "最后一次修改" else "编辑笔记",
+                text = when {
+                    isReadOnly -> "View Note"
+                    isSecondEdit -> "Final Edit"
+                    else -> "Edit Note"
+                },
                 fontFamily = FontFamily.Monospace,
                 fontSize = 16.sp,
                 color = if (isSecondEdit) theme.border else theme.text
             )
 
             if (!isReadOnly) {
-                Row(
+                Text(
+                    text = if (note.editCount == 2) "Finalize" else "Save",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 14.sp,
+                    color = if (editText.isNotBlank()) theme.border else theme.border.copy(alpha = 0.3f),
                     modifier = Modifier
                         .clickable(enabled = editText.isNotBlank()) {
                             if (note.editCount == 2) {
@@ -91,19 +99,7 @@ fun EditScreen(
                             }
                         }
                         .padding(12.dp, 8.dp)
-                        .background(
-                            if (editText.isNotBlank()) theme.border else theme.border.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(4.dp)
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (note.editCount == 2) "定格" else "保存",
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 14.sp,
-                        color = if (theme.isDark) Color.Black else Color.White
-                    )
-                }
+                )
             } else {
                 Spacer(modifier = Modifier.width(60.dp))
             }
@@ -141,7 +137,7 @@ fun EditScreen(
                 modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
             ) {
                 Text(
-                    text = "慎重，这是你最后一次修改机会",
+                    text = "Caution, this is your last chance to edit",
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
                     color = theme.border
@@ -154,7 +150,7 @@ fun EditScreen(
                 modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
             ) {
                 Text(
-                    text = "此笔记已定格为只读记忆",
+                    text = "This note is now locked as read-only memory",
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
                     color = theme.text.copy(alpha = 0.5f)
@@ -180,7 +176,7 @@ fun EditScreen(
             ) {
                 Column {
                     Text(
-                        text = "最终思绪确认",
+                        text = "Final Thought Confirmation",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 18.sp,
                         color = theme.text
@@ -189,7 +185,7 @@ fun EditScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "此次修改后，该笔记将定格为只读记忆，无法撤回。",
+                        text = "After this modification, the note will be finalized as read-only and cannot be undone.",
                         fontFamily = FontFamily.Monospace,
                         fontSize = 14.sp,
                         color = theme.text.copy(alpha = 0.7f)
@@ -201,23 +197,23 @@ fun EditScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        Row(
+                        Text(
+                            "Back",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 14.sp,
+                            color = theme.text,
                             modifier = Modifier
                                 .clickable { showFinalConfirm = false }
-                                .padding(12.dp, 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "返回",
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 14.sp,
-                                color = theme.text
-                            )
-                        }
+                                .padding(12.dp, 8.dp)
+                        )
 
                         Spacer(modifier = Modifier.width(12.dp))
 
-                        Row(
+                        Text(
+                            "Finalize",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 14.sp,
+                            color = if (editText.isNotBlank()) theme.border else theme.border.copy(alpha = 0.3f),
                             modifier = Modifier
                                 .clickable(enabled = editText.isNotBlank()) {
                                     if (editText.isNotBlank()) {
@@ -226,19 +222,7 @@ fun EditScreen(
                                     }
                                 }
                                 .padding(12.dp, 8.dp)
-                                .background(
-                                    if (editText.isNotBlank()) theme.border else theme.border.copy(alpha = 0.3f),
-                                    shape = RoundedCornerShape(4.dp)
-                                ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "写入定格",
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 14.sp,
-                                color = if (theme.isDark) Color.Black else Color.White
-                            )
-                        }
+                        )
                     }
                 }
             }

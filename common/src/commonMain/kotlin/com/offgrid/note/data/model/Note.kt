@@ -7,7 +7,8 @@ data class Note(
     val content: String,
     val createdAt: Instant,
     val updatedAt: Instant,
-    val editCount: Int
+    val editCount: Int,
+    val sceneId: String = ""
 ) {
     companion object {
         const val MAX_EDIT_COUNT = 3
